@@ -27,6 +27,7 @@ import org.pentaho.di.core.annotations.Step;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
+import org.pentaho.di.core.injection.Injection;
 import org.pentaho.di.core.injection.InjectionSupported;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.core.row.value.ValueMetaString;
@@ -42,6 +43,7 @@ import org.pentaho.di.trans.step.StepMetaInterface;
 import org.pentaho.di.trans.streaming.common.BaseStreamStepMeta;
 import org.pentaho.metastore.api.IMetaStore;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -51,7 +53,24 @@ import java.util.List;
 @InjectionSupported( localizationPrefix = "MQTTConsumerMeta.Injection." )
 public class MQTTConsumerMeta extends BaseStreamStepMeta implements StepMetaInterface, Cloneable {
 
+  public static final String MQTT_SERVER = "MQTT_SERVER";
+  public static final String TOPICS = "TOPICS";
+  public static final String TOPIC = "TOPIC";
+  public static final String MSG_OUTPUT_NAME = "MSG_OUTPUT_NAME";
+  public static final String TOPIC_OUTPUT_NAME = "TOPIC_OUTPUT_NAME";
   private static Class<?> PKG = MQTTConsumer.class; // for i18n purposes, needed by Translator2!!   $NON-NLS-1$
+
+  @Injection( name = MQTT_SERVER )
+  private String mqttServer;
+
+  @Injection( name = TOPICS )
+  private List<String> topics = new ArrayList<>();
+
+  @Injection( name = MSG_OUTPUT_NAME )
+  private String msgOutputName;
+
+  @Injection( name = TOPIC_OUTPUT_NAME )
+  private String topicOutputName;
 
   public MQTTConsumerMeta() {
     super();
@@ -69,16 +88,32 @@ public class MQTTConsumerMeta extends BaseStreamStepMeta implements StepMetaInte
   public void readRep( Repository rep, IMetaStore metaStore, ObjectId id_step, List<DatabaseMeta> databases )
     throws KettleException {
     super.readRep( rep, metaStore, id_step, databases );
+    setMqttServer( rep.getStepAttributeString( id_step, MQTT_SERVER  ) );
+    setMqttServer( rep.getStepAttributeString( id_step, MSG_OUTPUT_NAME  ) );
+    setMqttServer( rep.getStepAttributeString( id_step, TOPIC_OUTPUT_NAME  ) );
+    int topicCount = rep.countNrStepAttributes( id_step, TOPIC );
+    for ( int i = 0; i < topicCount; i++ ) {
+      topics.add( rep.getStepAttributeString( id_step, i, TOPIC ) );
+    }
   }
 
   public void saveRep( Repository rep, IMetaStore metaStore, ObjectId transId, ObjectId stepId )
     throws KettleException {
     super.saveRep( rep, metaStore, transId, stepId );
+    rep.saveStepAttribute( transId, stepId, MQTT_SERVER, mqttServer  );
+    rep.saveStepAttribute( transId, stepId, MSG_OUTPUT_NAME, msgOutputName  );
+    rep.saveStepAttribute( transId, stepId, TOPIC_OUTPUT_NAME, topicOutputName  );
+    rep.saveStepAttribute( transId, stepId, MQTT_SERVER, mqttServer  );
+    int i = 0;
+    for ( String topic : topics ) {
+      rep.saveStepAttribute( transId, stepId, i++, TOPIC, topic );
+    }
   }
 
   public void getFields( RowMetaInterface rowMeta, String origin, RowMetaInterface[] info, StepMeta nextStep,
                          VariableSpace space, Repository repository, IMetaStore metaStore ) throws KettleStepException {
-    rowMeta.addValueMeta( new ValueMetaString( "line" ) );
+    rowMeta.addValueMeta( new ValueMetaString( msgOutputName ) );
+    rowMeta.addValueMeta( new ValueMetaString( topicOutputName ) );
   }
 
   public StepInterface getStep( StepMeta stepMeta, StepDataInterface stepDataInterface, int cnr, TransMeta tr,
@@ -92,5 +127,37 @@ public class MQTTConsumerMeta extends BaseStreamStepMeta implements StepMetaInte
 
   public String getDialogClassName() {
     return "org.pentaho.di.trans.step.mqtt.MQTTConsumerDialog";
+  }
+
+  public String getMqttServer() {
+    return mqttServer;
+  }
+
+  public void setMqttServer( String mqttServer ) {
+    this.mqttServer = mqttServer;
+  }
+
+  public List<String> getTopics() {
+    return topics;
+  }
+
+  public void setTopics( List<String> topics ) {
+    this.topics = topics;
+  }
+
+  public String getMsgOutputName() {
+    return msgOutputName;
+  }
+
+  public void setMsgOutputName( String msgOutputName ) {
+    this.msgOutputName = msgOutputName;
+  }
+
+  public String getTopicOutputName() {
+    return topicOutputName;
+  }
+
+  public void setTopicOutputName( String topicOutputName ) {
+    this.topicOutputName = topicOutputName;
   }
 }
