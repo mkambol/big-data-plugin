@@ -61,6 +61,8 @@
     <guava.version>17.0</guava.version>
     <mockito-all.version>1.9.5</mockito-all.version>
     <slf4j.version>1.7.25</slf4j.version>
+    <activemq.version>5.13.1</activemq.version>
+    <paho.version>1.2.0</paho.version>
   </properties>
 
   <dependencies>
@@ -99,12 +101,30 @@
     </dependency>
 
     <dependency>
+      <groupId>org.eclipse.paho</groupId>
+      <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
+      <version>${paho.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>${slf4j.version}</version>
       <scope>compile</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-kahadb-store</artifactId>
+      <version>${activemq.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-mqtt</artifactId>
+      <version>${activemq.version}</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
 
@@ -117,6 +137,7 @@
         <extensions>true</extensions>
         <configuration>
           <instructions>
+            <Embed-Dependency>org.eclipse.paho.client.mqttv3;scope=compile|runtime</Embed-Dependency>
             <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
             <Bundle-Version>${project.version}</Bundle-Version>
             <Export-Package>org.pentaho.di.trans.step.mqtt.*;version=${project.version}</Export-Package>
