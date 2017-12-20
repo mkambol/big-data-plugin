@@ -27,6 +27,7 @@ import org.apache.commons.vfs2.FileObject;
 import org.apache.commons.vfs2.FileSystemException;
 import org.pentaho.di.core.exception.KettleFileException;
 import org.pentaho.di.core.exception.KettleMissingPluginsException;
+import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.exception.KettleXMLException;
 import org.pentaho.di.core.row.RowMeta;
 import org.pentaho.di.core.row.value.ValueMetaString;
@@ -42,6 +43,7 @@ import org.pentaho.di.trans.step.StepStatus;
 import org.pentaho.di.trans.steps.transexecutor.TransExecutorData;
 import org.pentaho.di.trans.steps.transexecutor.TransExecutorParameters;
 import org.pentaho.di.trans.streaming.common.BaseStreamStep;
+import org.pentaho.di.trans.streaming.common.FixedTimeStreamWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,13 +59,10 @@ import static com.google.common.base.Throwables.propagate;
 /**
  * An example step plugin for purposes of demonstrating a strategy for handling streams of data.
  */
-public class MQTTConsumer extends BaseStreamStep<List<String>> implements StepInterface {
+public class MQTTConsumer extends BaseStreamStep implements StepInterface {
 
   private static Class<?> PKG = MQTTConsumer.class; // for i18n purposes, needed by Translator2!!   $NON-NLS-1$
   private MQTTConsumerMeta mqttConsumerMeta;
-  private SubtransExecutor subtransExecutor;
-
-  private final Logger logger = LoggerFactory.getLogger( getClass() );
 
   public MQTTConsumer( StepMeta stepMeta, StepDataInterface stepDataInterface, int copyNr, TransMeta transMeta,
                        Trans trans ) {
@@ -74,21 +73,17 @@ public class MQTTConsumer extends BaseStreamStep<List<String>> implements StepIn
     Preconditions.checkNotNull( stepMetaInterface );
     mqttConsumerMeta = (MQTTConsumerMeta) stepMetaInterface;
 
-    String ktr = getFilePath( mqttConsumerMeta.getTransformationPath() );
-
-    try {
-      subtransExecutor = new SubtransExecutor(
-        getTrans(), new TransMeta( ktr ), true,
-        new TransExecutorData(), new TransExecutorParameters() );
-
-    } catch ( KettleXMLException | KettleMissingPluginsException e ) {
-      logger.error( e.getLocalizedMessage(), e );
-    }
     RowMeta rowMeta = new RowMeta();
-    rowMeta.addValueMeta( new ValueMetaString( "line" ) );
-
-    //todo window = new FixedTimeStreamWindow<>( subtransExecutor, rowMeta, getDuration(), getBatchSize() );
+    try {
+      mqttConsumerMeta.getFields(
+        rowMeta, getStepname(), null, null, this, repository, metaStore );
+    } catch ( KettleStepException e ) {
+      // todo something.
+    }
+    window = new FixedTimeStreamWindow<>( subtransExecutor, rowMeta, getDuration(), getBatchSize() );
     //todo source = new TailFileStreamSource( sourceFile );
+    source = new MQTTStreamSource(
+      mqttConsumerMeta.getMqttServer(), mqttConsumerMeta.getTopics(),  1 );
     return super.init( stepMetaInterface, stepDataInterface );
   }
 
