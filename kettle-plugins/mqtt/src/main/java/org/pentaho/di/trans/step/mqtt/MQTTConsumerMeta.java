@@ -47,7 +47,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
 @Step( id = "MQTTConsumer", image = "MQTTConsumer.svg", name = "MQTT Consumer",
   description = "Subscribes and streams an MQTT Topic", categoryDescription = "Streaming" )
 @InjectionSupported( localizationPrefix = "MQTTConsumerMeta.Injection." )
@@ -83,6 +82,8 @@ public class MQTTConsumerMeta extends BaseStreamStepMeta implements StepMetaInte
   }
 
   public void setDefault() {
+    super.setDefault();
+    mqttServer = "";
   }
 
   public void readRep( Repository rep, IMetaStore metaStore, ObjectId id_step, List<DatabaseMeta> databases )
