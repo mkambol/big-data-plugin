@@ -48,7 +48,7 @@ import java.util.List;
 
 
 
-@Step( id = "MQTTConsumer", image = "MQTTConsumer.svg", name = "MQTT Subscriber",
+@Step( id = "MQTTConsumer", image = "MQTTConsumer.svg", name = "MQTT Consumer",
   description = "Subscribes and streams an MQTT Topic", categoryDescription = "Streaming" )
 @InjectionSupported( localizationPrefix = "MQTTConsumerMeta.Injection." )
 public class MQTTConsumerMeta extends BaseStreamStepMeta implements StepMetaInterface, Cloneable {
@@ -61,16 +61,16 @@ public class MQTTConsumerMeta extends BaseStreamStepMeta implements StepMetaInte
   private static Class<?> PKG = MQTTConsumer.class; // for i18n purposes, needed by Translator2!!   $NON-NLS-1$
 
   @Injection( name = MQTT_SERVER )
-  private String mqttServer;
+  public String mqttServer;
 
   @Injection( name = TOPICS )
-  private List<String> topics = new ArrayList<>();
+  public List<String> topics = new ArrayList<>();
 
   @Injection( name = MSG_OUTPUT_NAME )
-  private String msgOutputName;
+  public String msgOutputName = "Message";
 
   @Injection( name = TOPIC_OUTPUT_NAME )
-  private String topicOutputName;
+  public String topicOutputName = "Topic";
 
   public MQTTConsumerMeta() {
     super();
